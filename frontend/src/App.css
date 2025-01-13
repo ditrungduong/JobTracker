@@ -1,17 +1,17 @@
-/* App.css */
-
-/* General body styling */
+/* Add a background image to the entire body */
 body {
   font-family: 'Arial', sans-serif;
   margin: 0;
   padding: 0;
-  background-color: #e8f5e9; /* Light green background */
-  color: #1b5e20; /* Dark green text */
+  background-size: cover; /* Make the image cover the entire screen */
+  background-position: center; /* Center the image */
+  background-repeat: no-repeat; /* Prevent tiling */
+  color: #1b5e20; /* Dark green text for readability */
 }
 
 /* Main container */
 .container {
-  max-width: 600px;
+  max-width: 800px; /* Increased width for better layout */
   margin: 50px auto;
   padding: 20px;
   background: #ffffff;
@@ -24,25 +24,29 @@ body {
 h1 {
   text-align: center;
   color: #2e7d32; /* Medium green */
+  margin-bottom: 20px; /* Add spacing below the header */
 }
 
 /* Input and button container */
 .input-container {
   display: flex;
-  justify-content: center;
+  flex-wrap: wrap; /* Allow wrapping for smaller screens */
+  gap: 10px; /* Add spacing between fields */
+  justify-content: center; /* Center align the fields */
   margin-bottom: 20px;
 }
 
 /* Input field */
-input[type="text"] {
-  flex: 1;
+input[type="text"],
+input[type="date"] {
+  flex: 1 1 150px; /* Allow flexible width with a minimum size */
   padding: 10px;
   border: 1px solid #81c784; /* Light green border */
   border-radius: 4px;
   font-size: 16px;
-  margin-right: 10px;
   color: #2e7d32; /* Medium green text */
   background-color: #f1f8e9; /* Very light green background */
+  box-sizing: border-box; /* Include padding in width calculation */
 }
 
 /* Add button */
@@ -73,9 +77,83 @@ li {
   border: 1px solid #81c784; /* Light green border */
   border-radius: 4px;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column; /* Stack content vertically for better layout */
+}
+
+li span {
+  margin: 5px 0; /* Add spacing between job details */
 }
 
 li:nth-child(odd) {
   background: #e8f5e9; /* Slightly darker light green for alternating rows */
 }
+
+/* Main container */
+.container {
+  max-width: 100%; /* Ensure it spans the entire width */
+  margin: 50px auto;
+  padding: 20px;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border: 2px solid #a5d6a7; /* Light green border */
+  display: flex;
+  flex-direction: column; /* Stack items vertically */
+  align-items: center; /* Center align */
+  gap: 20px; /* Space between header and form */
+}
+
+/* Form container */
+.input-container {
+  display: flex;
+  gap: 10px; /* Space between fields */
+  flex-wrap: nowrap; /* Prevent wrapping */
+  justify-content: space-between; /* Distribute items evenly */
+  align-items: center; /* Align items vertically */
+  width: 100%; /* Ensure full width */
+  padding: 10px;
+}
+
+/* Input fields */
+input[type="text"],
+input[type="date"] {
+  flex: 1; /* Make inputs share available space */
+  padding: 10px;
+  border: 1px solid #81c784; /* Light green border */
+  border-radius: 4px;
+  font-size: 16px;
+  color: #2e7d32; /* Medium green text */
+  background-color: #f9fbe7; /* Very light green background */
+  box-sizing: border-box; /* Include padding in width/height */
+  outline: none;
+}
+
+input[type="text"]:focus,
+input[type="date"]:focus {
+  border-color: #43a047; /* Darker green on focus */
+  box-shadow: 0 0 5px rgba(67, 160, 71, 0.5); /* Subtle glow effect */
+}
+
+/* Add button */
+button {
+  padding: 10px 20px;
+  background-color: #43a047; /* Darker green */
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  outline: none;
+  flex-shrink: 0; /* Prevent button from shrinking */
+}
+
+button:hover {
+  background-color: #2e7d32; /* Dark green hover */
+}
+
+button:focus {
+  border: 1px solid #2e7d32; /* Add border on focus */
+  box-shadow: 0 0 5px rgba(46, 125, 50, 0.5); /* Add subtle glow */
+}
+
+
