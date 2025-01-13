@@ -2,86 +2,118 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 
 function App() {
-    // State for storing the list of jobs
-    const [jobs, setJobs] = useState([]); 
+    // State for job list
+    const [jobs, setJobs] = useState([]);
 
-    // States for adding a new job
-    const [companyName, setCompanyName] = useState('');
-    const [jobTitle, setJobTitle] = useState('');
-    const [applicationDate, setApplicationDate] = useState('');
-    const [applicationStatus, setApplicationStatus] = useState('');
-    const [interviewDate, setInterviewDate] = useState('');
+    // State for new job form
+    const [newJob, setNewJob] = useState({
+        companyName: '',
+        title: '', // Use title consistently
+        applicationDate: '',
+        applicationStatus: '',
+        interviewDate: '',
+    });
+
+    // State for error messages
+    const [error, setError] = useState('');
 
     // Fetch jobs from the backend when the component is first loaded
     useEffect(() => {
         fetchJobs();
     }, []);
 
+    // Fetch all jobs from the backend
     const fetchJobs = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/jobs'); // Fetch all jobs
-            const data = await response.json(); // Parse the JSON response
-            setJobs(data); // Update the `jobs` state
+            const response = await fetch('http://localhost:5000/api/jobs');
+            if (!response.ok) {
+                throw new Error('Failed to fetch jobs');
+            }
+            const data = await response.json();
+            setJobs(data);
         } catch (error) {
-            console.error('Failed to fetch jobs:', error);
+            console.error('Error fetching jobs:', error);
+            setError('Unable to fetch jobs. Please try again later.');
         }
     };
 
+    // Handle input changes for the new job form
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setNewJob({ ...newJob, [name]: value });
+    };
+
+    // Add a new job
     const addJob = async () => {
-        if (!companyName || !jobTitle || !applicationDate || !applicationStatus) return;
-        const newJob = {
-            companyName,
-            jobTitle,
-            applicationDate,
-            applicationStatus,
-            interviewDate,
-        };
+        const { title, companyName, applicationDate, applicationStatus } = newJob;
+
+        // Validation
+        if (!title || !companyName || !applicationDate || !applicationStatus) {
+            alert('Please fill out all required fields before adding a job.');
+            return;
+        }
+
         try {
             const response = await fetch('http://localhost:5000/api/jobs', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newJob),
             });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to add job');
+            }
+
             const createdJob = await response.json();
-            setJobs([...jobs, createdJob]); // Add the new job to the jobs state
-            setCompanyName(''); // Clear the form fields
-            setJobTitle('');
-            setApplicationDate('');
-            setApplicationStatus('');
-            setInterviewDate('');
+            setJobs([...jobs, createdJob]); // Update the job list with the new job
+            setNewJob({
+                companyName: '',
+                title: '', // Clear title field
+                applicationDate: '',
+                applicationStatus: '',
+                interviewDate: '',
+            }); // Clear the form
         } catch (error) {
-            console.error('Failed to add job:', error); // Log errors if any
+            console.error('Error adding job:', error.message);
+            setError(error.message || 'Unable to add job. Please try again later.');
         }
     };
-    
 
     return (
         <div className="container">
             <h1>Job Tracker</h1>
 
-            {/* Add Job Section */}
+            {/* Display any error messages */}
+            {error && <div className="error-message">{error}</div>}
+
+            {/* Add Job Form */}
             <div className="input-container">
                 <input
                     type="text"
-                    value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
+                    name="companyName"
+                    value={newJob.companyName}
+                    onChange={handleInputChange}
                     placeholder="Company Name"
                 />
                 <input
                     type="text"
-                    value={jobTitle}
-                    onChange={(e) => setJobTitle(e.target.value)}
+                    name="title" // Changed from jobTitle to title
+                    value={newJob.title}
+                    onChange={handleInputChange}
                     placeholder="Job Title"
                 />
                 <input
                     type="date"
-                    value={applicationDate}
-                    onChange={(e) => setApplicationDate(e.target.value)}
+                    name="applicationDate"
+                    value={newJob.applicationDate}
+                    onChange={handleInputChange}
                     placeholder="Application Date"
                 />
                 <select
-                    value={applicationStatus}
-                    onChange={(e) => setApplicationStatus(e.target.value)}
+                    name="applicationStatus"
+                    value={newJob.applicationStatus}
+                    onChange={handleInputChange}
                 >
                     <option value="">Select Status</option>
                     <option value="Submitted">Submitted</option>
@@ -92,14 +124,15 @@ function App() {
                 </select>
                 <input
                     type="date"
-                    value={interviewDate}
-                    onChange={(e) => setInterviewDate(e.target.value)}
+                    name="interviewDate"
+                    value={newJob.interviewDate}
+                    onChange={handleInputChange}
                     placeholder="Interview Date"
                 />
                 <button onClick={addJob}>Add Job</button>
             </div>
 
-            {/* Job List Section */}
+            {/* Job List */}
             <ul>
                 {jobs.map((job) => (
                     <li key={job.id}>
@@ -107,7 +140,7 @@ function App() {
                             <strong>Company:</strong> {job.companyName}
                         </span>
                         <span>
-                            <strong>Job Title:</strong> {job.jobTitle}
+                            <strong>Job Title:</strong> {job.title} {/* Use title */}
                         </span>
                         <span>
                             <strong>Application Date:</strong> {job.applicationDate}
@@ -118,12 +151,14 @@ function App() {
                         <span>
                             <strong>Interview Date:</strong> {job.interviewDate}
                         </span>
-                        {/* Placeholder for Edit button */}
-                        <button onClick={() => alert('Edit functionality to be implemented')}>
+                        <button
+                            onClick={() => alert('Edit functionality to be implemented by teammates')}
+                        >
                             Edit
                         </button>
-                        {/* Placeholder for Delete button */}
-                        <button onClick={() => alert('Delete functionality to be implemented')}>
+                        <button
+                            onClick={() => alert('Delete functionality to be implemented by teammates')}
+                        >
                             Delete
                         </button>
                     </li>
