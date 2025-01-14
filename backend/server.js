@@ -1,171 +1,44 @@
-import React, { useState, useEffect } from 'react';
-import './App.css';
+const express = require('express');
+const cors = require('cors');
+const db = require('./database'); // Database connection
 
-function App() {
-    // State for job list
-    const [jobs, setJobs] = useState([]);
+const app = express();
+app.use(cors());
+app.use(express.json());
 
-    // State for new job form
-    const [newJob, setNewJob] = useState({
-        companyName: '',
-        title: '', // Changed from jobTitle to title for consistency with backend
-        applicationDate: '',
-        applicationStatus: '',
-        interviewDate: '',
+// API endpoint to fetch all jobs
+app.get('/api/jobs', (req, res) => {
+    const query = `SELECT * FROM jobs`;
+    db.all(query, [], (err, rows) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        res.json(rows);
     });
+});
 
-    // State for error messages
-    const [error, setError] = useState('');
+// API endpoint to add a job
+app.post('/api/jobs', (req, res) => {
+    const { title, companyName, applicationDate, applicationStatus, interviewDate } = req.body;
 
-    // Fetch jobs from the backend when the component is first loaded
-    useEffect(() => {
-        fetchJobs();
-    }, []);
+    if (!title || !companyName || !applicationDate || !applicationStatus) {
+        return res.status(400).json({ error: 'All required fields must be provided.' });
+    }
 
-    // Fetch all jobs from the backend
-    const fetchJobs = async () => {
-        try {
-            const response = await fetch('http://localhost:5000/api/jobs');
-            if (!response.ok) {
-                throw new Error('Failed to fetch jobs');
-            }
-            const data = await response.json();
-            setJobs(data);
-        } catch (error) {
-            console.error('Error fetching jobs:', error);
-            setError('Unable to fetch jobs. Please try again later.');
+    const query = `
+        INSERT INTO jobs (title, companyName, applicationDate, applicationStatus, interviewDate)
+        VALUES (?, ?, ?, ?, ?)
+    `;
+    db.run(query, [title, companyName, applicationDate, applicationStatus, interviewDate], function (err) {
+        if (err) {
+            return res.status(500).json({ error: err.message });
         }
-    };
+        res.status(201).json({ id: this.lastID, title, companyName, applicationDate, applicationStatus, interviewDate });
+    });
+});
 
-    // Handle input changes for the new job form
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setNewJob({ ...newJob, [name]: value });
-    };
-
-    // Add a new job
-    const addJob = async () => {
-        const { title, companyName, applicationDate, applicationStatus } = newJob;
-
-        // Validation
-        if (!title || !companyName || !applicationDate || !applicationStatus) {
-            alert('Please fill out all required fields before adding a job.');
-            return;
-        }
-
-        try {
-            const response = await fetch('http://localhost:5000/api/jobs', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newJob),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to add job');
-            }
-
-            const createdJob = await response.json();
-            setJobs([...jobs, createdJob]); // Update the job list with the new job
-            setNewJob({
-                companyName: '',
-                title: '', // Clear the title field
-                applicationDate: '',
-                applicationStatus: '',
-                interviewDate: '',
-            }); // Clear the form
-        } catch (error) {
-            console.error('Error adding job:', error.message);
-            setError(error.message || 'Unable to add job. Please try again later.');
-        }
-    };
-
-    return (
-        <div className="container">
-            <h1>Job Tracker</h1>
-
-            {/* Display any error messages */}
-            {error && <div className="error-message">{error}</div>}
-
-            {/* Add Job Form */}
-            <div className="input-container">
-                <input
-                    type="text"
-                    name="companyName"
-                    value={newJob.companyName}
-                    onChange={handleInputChange}
-                    placeholder="Company Name"
-                />
-                <input
-                    type="text"
-                    name="title" // Changed from jobTitle to title
-                    value={newJob.title}
-                    onChange={handleInputChange}
-                    placeholder="Job Title"
-                />
-                <input
-                    type="date"
-                    name="applicationDate"
-                    value={newJob.applicationDate}
-                    onChange={handleInputChange}
-                    placeholder="Application Date"
-                />
-                <select
-                    name="applicationStatus"
-                    value={newJob.applicationStatus}
-                    onChange={handleInputChange}
-                >
-                    <option value="">Select Status</option>
-                    <option value="Submitted">Submitted</option>
-                    <option value="In Review">In Review</option>
-                    <option value="Interview Scheduled">Interview Scheduled</option>
-                    <option value="Offer Received">Offer Received</option>
-                    <option value="Rejected">Rejected</option>
-                </select>
-                <input
-                    type="date"
-                    name="interviewDate"
-                    value={newJob.interviewDate}
-                    onChange={handleInputChange}
-                    placeholder="Interview Date"
-                />
-                <button onClick={addJob}>Add Job</button>
-            </div>
-
-            {/* Job List */}
-            <ul>
-                {jobs.map((job) => (
-                    <li key={job.id}>
-                        <span>
-                            <strong>Company:</strong> {job.companyName}
-                        </span>
-                        <span>
-                            <strong>Job Title:</strong> {job.title} {/* Use title instead of jobTitle */}
-                        </span>
-                        <span>
-                            <strong>Application Date:</strong> {job.applicationDate}
-                        </span>
-                        <span>
-                            <strong>Status:</strong> {job.applicationStatus}
-                        </span>
-                        <span>
-                            <strong>Interview Date:</strong> {job.interviewDate}
-                        </span>
-                        <button
-                            onClick={() => alert('Edit functionality to be implemented by teammates')}
-                        >
-                            Edit
-                        </button>
-                        <button
-                            onClick={() => alert('Delete functionality to be implemented by teammates')}
-                        >
-                            Delete
-                        </button>
-                    </li>
-                ))}
-            </ul>
-        </div>
-    );
-}
-
-export default App;
+// Start the server
+const PORT = 5000;
+app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+});
