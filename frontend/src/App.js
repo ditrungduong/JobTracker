@@ -8,7 +8,7 @@ function App() {
     // State for new job form
     const [newJob, setNewJob] = useState({
         companyName: '',
-        title: '', // Use title consistently
+        title: '', 
         applicationDate: '',
         applicationStatus: '',
         interviewDate: '',
@@ -98,7 +98,7 @@ function App() {
                 />
                 <input
                     type="text"
-                    name="title" // Changed from jobTitle to title
+                    name="title" 
                     value={newJob.title}
                     onChange={handleInputChange}
                     placeholder="Job Title"
