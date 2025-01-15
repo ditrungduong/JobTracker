@@ -17,6 +17,9 @@ function App() {
     // State for error messages
     const [error, setError] = useState('');
 
+     // State for editing jobes
+    const [editingJob, setEditingJob] = useState(null);
+
     // Fetch jobs from the backend when the component is first loaded
     useEffect(() => {
         fetchJobs();
@@ -80,6 +83,54 @@ function App() {
         }
     };
 
+
+    const startEditing = (job) => {
+        setEditingJob(job.id);
+        setNewJob(job); // Pre-fill form with job data
+    };
+
+    const updateJob = async () => {
+        try {
+            const response = await fetch(`http://localhost:5000/api/jobs/${editingJob}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newJob),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to edit job');
+            }
+
+            const updateJobInList = (jobs, updatedJob, editingJob) => 
+                jobs.map((job) => job.id === editingJob ? { ...job, ...updatedJob } : job);
+            
+            setJobs(updateJobInList(jobs, newJob, editingJob));// Update the job list with the edited job
+
+            setEditingJob(null); // Clear edit section
+            setNewJob({
+                companyName: '',
+                title: '',
+                applicationDate: '',
+                applicationStatus: '',
+                interviewDate: '',
+            });
+        } catch (error) {
+            setError('Unable to edit job. Please try again later.');
+        }
+    };
+
+    const cancelEditing = () => {
+        setEditingJob(null); // Clear edit section
+        setNewJob({
+            companyName: '',
+            title: '',
+            applicationDate: '',
+            applicationStatus: '',
+            interviewDate: '',
+        });
+    };
+
     return (
         <div className="container">
             <h1>Job Tracker</h1>
@@ -128,9 +179,16 @@ function App() {
                     value={newJob.interviewDate}
                     onChange={handleInputChange}
                     placeholder="Interview Date"
-                />
-                <button onClick={addJob}>Add Job</button>
-            </div>
+                    />
+                    {editingJob ? (
+                        <>
+                            <button onClick={updateJob}>Save</button>
+                            <button onClick={cancelEditing}>Cancel</button>
+                        </>
+                    ) : (
+                        <button onClick={addJob}>Add Job</button>
+                    )}
+                </div>
 
             {/* Job List */}
             <ul>
@@ -151,11 +209,7 @@ function App() {
                         <span>
                             <strong>Interview Date:</strong> {job.interviewDate}
                         </span>
-                        <button
-                            onClick={() => alert('Edit functionality to be implemented by teammates')}
-                        >
-                            Edit
-                        </button>
+                        <button onClick={() => startEditing(job)}>Edit</button>
                         <button
                             onClick={() => alert('Delete functionality to be implemented by teammates')}
                         >

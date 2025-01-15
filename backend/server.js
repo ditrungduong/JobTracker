@@ -37,6 +37,35 @@ app.post('/api/jobs', (req, res) => {
     });
 });
 
+// API endpoint to update a job
+app.put('/api/jobs/:id', (req, res) => {
+    const { id } = req.params;
+    const { title, companyName, applicationDate, applicationStatus, interviewDate } = req.body;
+
+    // Validate required fields
+    if (!title || !companyName || !applicationDate || !applicationStatus) {
+        return res.status(400).json({ error: 'All required fields must be provided.' });
+    }
+
+    const query = `
+        UPDATE jobs
+        SET title = ?, companyName = ?, applicationDate = ?, applicationStatus = ?, interviewDate = ?
+        WHERE id = ?
+    `;
+
+    db.run(query, [title, companyName, applicationDate, applicationStatus, interviewDate, id], function (err) {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+
+        if (this.changes === 0) {
+            return res.status(404).json({ error: 'Job not found' });
+        }
+
+        res.json({ id, title, companyName, applicationDate, applicationStatus, interviewDate });
+    });
+});
+
 // Start the server
 const PORT = 5000;
 app.listen(PORT, () => {
