@@ -16,23 +16,24 @@ const db = new sqlite3.Database('./jobs.db', (err) => {
  */
 const initializeDatabase = () => {
     db.serialize(() => {
-        // Create the `jobs` table with all required fields
-        db.run(`
-            CREATE TABLE IF NOT EXISTS jobs (
+        db.run(
+            `CREATE TABLE IF NOT EXISTS jobs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 title TEXT NOT NULL,
                 companyName TEXT NOT NULL,
                 applicationDate TEXT NOT NULL,
                 applicationStatus TEXT NOT NULL,
-                interviewDate TEXT
-            )
-        `, (err) => {
-            if (err) {
-                console.error('Error creating jobs table:', err.message);
-            } else {
-                console.log('Jobs table ensured.');
+                interviewDate TEXT,
+                skills TEXT
+            )`,
+            (err) => {
+                if (err) {
+                    console.error('Error creating jobs table:', err.message);
+                } else {
+                    console.log('Jobs table ensured.');
+                }
             }
-        });
+        );
     });
 };
 

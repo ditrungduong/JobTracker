@@ -8,17 +8,16 @@ function App() {
     // State for new job form
     const [newJob, setNewJob] = useState({
         companyName: '',
-        title: '', 
+        title: '',
         applicationDate: '',
         applicationStatus: '',
         interviewDate: '',
+        skills: [], // Skills array for tag input
     });
 
-    // State for error messages
-    const [error, setError] = useState('');
-
-     // State for editing jobes
-    const [editingJob, setEditingJob] = useState(null);
+    const [newSkill, setNewSkill] = useState(''); // Current skill input
+    const [error, setError] = useState(''); // State for error messages
+    const [editingJob, setEditingJob] = useState(null); // State for editing jobs
 
     // Fetch jobs from the backend when the component is first loaded
     useEffect(() => {
@@ -33,7 +32,11 @@ function App() {
                 throw new Error('Failed to fetch jobs');
             }
             const data = await response.json();
-            setJobs(data);
+            const parsedJobs = data.map((job) => ({
+                ...job,
+                skills: typeof job.skills === 'string' ? JSON.parse(job.skills) : job.skills || [],
+            }));
+            setJobs(parsedJobs);
         } catch (error) {
             console.error('Error fetching jobs:', error);
             setError('Unable to fetch jobs. Please try again later.');
@@ -46,11 +49,29 @@ function App() {
         setNewJob({ ...newJob, [name]: value });
     };
 
+    // Add a new skill as a tag
+    const addSkill = () => {
+        if (newSkill.trim()) {
+            setNewJob((prev) => ({
+                ...prev,
+                skills: [...prev.skills, newSkill.trim()],
+            }));
+            setNewSkill(''); // Clear skill input
+        }
+    };
+
+    // Remove a skill from the skills array
+    const removeSkill = (index) => {
+        setNewJob((prev) => ({
+            ...prev,
+            skills: prev.skills.filter((_, i) => i !== index),
+        }));
+    };
+
     // Add a new job
     const addJob = async () => {
-        const { title, companyName, applicationDate, applicationStatus } = newJob;
+        const { title, companyName, applicationDate, applicationStatus, skills } = newJob;
 
-        // Validation
         if (!title || !companyName || !applicationDate || !applicationStatus) {
             alert('Please fill out all required fields before adding a job.');
             return;
@@ -60,7 +81,7 @@ function App() {
             const response = await fetch('http://localhost:5000/api/jobs', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newJob),
+                body: JSON.stringify({ ...newJob, skills: JSON.stringify(skills) }),
             });
 
             if (!response.ok) {
@@ -69,21 +90,22 @@ function App() {
             }
 
             const createdJob = await response.json();
-            setJobs([...jobs, createdJob]); // Update the job list with the new job
+            setJobs([...jobs, { ...createdJob, skills: JSON.parse(createdJob.skills) }]);
             setNewJob({
                 companyName: '',
-                title: '', // Clear title field
+                title: '',
                 applicationDate: '',
                 applicationStatus: '',
                 interviewDate: '',
-            }); // Clear the form
+                skills: [],
+            });
         } catch (error) {
             console.error('Error adding job:', error.message);
             setError(error.message || 'Unable to add job. Please try again later.');
         }
     };
 
-
+    // Start editing a job
     const startEditing = (job) => {
         setEditingJob(job.id);
         setNewJob(job); // Pre-fill form with job data
@@ -94,7 +116,10 @@ function App() {
             const response = await fetch(`http://localhost:5000/api/jobs/${editingJob}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newJob),
+                body: JSON.stringify({
+                    ...newJob,
+                    skills: JSON.stringify(newJob.skills),
+                }),
             });
 
             if (!response.ok) {
@@ -102,18 +127,19 @@ function App() {
                 throw new Error(errorData.error || 'Failed to edit job');
             }
 
-            const updateJobInList = (jobs, updatedJob, editingJob) => 
-                jobs.map((job) => job.id === editingJob ? { ...job, ...updatedJob } : job);
-            
-            setJobs(updateJobInList(jobs, newJob, editingJob));// Update the job list with the edited job
-
-            setEditingJob(null); // Clear edit section
+            setJobs((prevJobs) =>
+                prevJobs.map((job) =>
+                    job.id === editingJob ? { ...job, ...newJob, skills: [...newJob.skills] } : job
+                )
+            );
+            setEditingJob(null);
             setNewJob({
                 companyName: '',
                 title: '',
                 applicationDate: '',
                 applicationStatus: '',
                 interviewDate: '',
+                skills: [],
             });
         } catch (error) {
             setError('Unable to edit job. Please try again later.');
@@ -121,24 +147,21 @@ function App() {
     };
 
     const cancelEditing = () => {
-        setEditingJob(null); // Clear edit section
+        setEditingJob(null);
         setNewJob({
             companyName: '',
             title: '',
             applicationDate: '',
             applicationStatus: '',
             interviewDate: '',
+            skills: [],
         });
     };
 
     return (
         <div className="container">
             <h1>Job Tracker</h1>
-
-            {/* Display any error messages */}
             {error && <div className="error-message">{error}</div>}
-
-            {/* Add Job Form */}
             <div className="input-container">
                 <input
                     type="text"
@@ -149,7 +172,7 @@ function App() {
                 />
                 <input
                     type="text"
-                    name="title" 
+                    name="title"
                     value={newJob.title}
                     onChange={handleInputChange}
                     placeholder="Job Title"
@@ -161,6 +184,26 @@ function App() {
                     onChange={handleInputChange}
                     placeholder="Application Date"
                 />
+                <div>
+                    <label>Skills:</label>
+                    <div className="tag-input">
+                        <input
+                            type="text"
+                            placeholder="Type a skill and click Add"
+                            value={newSkill}
+                            onChange={(e) => setNewSkill(e.target.value)}
+                        />
+                        <button onClick={addSkill}>Add</button>
+                    </div>
+                    <div className="tags-container">
+                        {newJob.skills.map((skill, index) => (
+                            <span key={index} className="tag">
+                                {skill}{' '}
+                                <button onClick={() => removeSkill(index)}>✕</button>
+                            </span>
+                        ))}
+                    </div>
+                </div>
                 <select
                     name="applicationStatus"
                     value={newJob.applicationStatus}
@@ -179,18 +222,17 @@ function App() {
                     value={newJob.interviewDate}
                     onChange={handleInputChange}
                     placeholder="Interview Date"
-                    />
-                    {editingJob ? (
-                        <>
-                            <button onClick={updateJob}>Save</button>
-                            <button onClick={cancelEditing}>Cancel</button>
-                        </>
-                    ) : (
-                        <button onClick={addJob}>Add Job</button>
-                    )}
-                </div>
+                />
+                {editingJob ? (
+                    <>
+                        <button onClick={updateJob}>Save</button>
+                        <button onClick={cancelEditing}>Cancel</button>
+                    </>
+                ) : (
+                    <button onClick={addJob}>Add Job</button>
+                )}
+            </div>
 
-            {/* Job List */}
             <ul>
                 {jobs.map((job) => (
                     <li key={job.id}>
@@ -198,10 +240,13 @@ function App() {
                             <strong>Company:</strong> {job.companyName}
                         </span>
                         <span>
-                            <strong>Job Title:</strong> {job.title} {/* Use title */}
+                            <strong>Job Title:</strong> {job.title}
                         </span>
                         <span>
                             <strong>Application Date:</strong> {job.applicationDate}
+                        </span>
+                        <span>
+                            <strong>Skills:</strong> {job.skills.join(', ')}
                         </span>
                         <span>
                             <strong>Status:</strong> {job.applicationStatus}
@@ -210,11 +255,7 @@ function App() {
                             <strong>Interview Date:</strong> {job.interviewDate}
                         </span>
                         <button onClick={() => startEditing(job)}>Edit</button>
-                        <button
-                            onClick={() => alert('Delete functionality to be implemented by teammates')}
-                        >
-                            Delete
-                        </button>
+                        <button>Delete</button>
                     </li>
                 ))}
             </ul>
