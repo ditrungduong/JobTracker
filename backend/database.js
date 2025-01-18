@@ -34,6 +34,21 @@ const initializeDatabase = () => {
                 }
             }
         );
+
+        db.run(
+            `CREATE TABLE IF NOT EXISTS authorization (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                password TEXT NOT NULL
+            )`,
+            (err) => {
+                if (err) {
+                    console.error('Error creating authorization table:', err.message);
+                } else {
+                    console.log('Password table ensured.');
+                }
+            }
+        );
+
     });
 };
 
