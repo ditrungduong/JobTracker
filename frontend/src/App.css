@@ -161,3 +161,32 @@ li button:hover {
   font-size: 14px;
   cursor: pointer;
 }
+
+.skill-analysis {
+  margin-top: 20px;
+  padding: 20px;
+  background-color: #f1f8e9; /* Light green */
+  border: 1px solid #81c784; /* Green border */
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.skill-analysis h2 {
+  margin-bottom: 15px;
+  color: #2e7d32; /* Medium green */
+}
+
+.skill-analysis ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.skill-analysis li {
+  margin-bottom: 10px;
+}
+
+.skill-analysis .in-demand {
+  color: #ff5722; /* Orange */
+  font-weight: bold;
+  margin-left: 10px;
+}

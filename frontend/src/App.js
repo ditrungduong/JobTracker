@@ -68,6 +68,31 @@ function App() {
         }));
     };
 
+    // Skill percentage analysis
+    const skillCounts = (jobs) => {
+        const totalJobs = jobs.length;
+        const skillMap = {};
+    
+        jobs.forEach((job) => {
+            job.skills.forEach((skill) => {
+                const normalizedSkill = skill.toLowerCase(); // Normalize skill to lowercase
+                skillMap[normalizedSkill] = (skillMap[normalizedSkill] || 0) + 1;
+            });
+        });
+    
+        // Calculate percentage and in-demand status
+        const result = {};
+        for (const [skill, count] of Object.entries(skillMap)) {
+            const percentage = ((count / totalJobs) * 100).toFixed(2); // Round to 2 decimal places
+            result[skill] = {
+                percentage,
+                inDemand: percentage >= 50, // Check if the skill is in demand
+            };
+        }
+    
+        return result;
+    };
+
     // Add a new job
     const addJob = async () => {
         const { title, companyName, applicationDate, applicationStatus, skills } = newJob;
@@ -259,6 +284,19 @@ function App() {
                     </li>
                 ))}
             </ul>
+
+        {/* Skill Analysis Section */}
+        <div className="skill-analysis">
+            <h2>Skill Analysis</h2>
+            <ul>
+                {Object.entries(skillCounts(jobs)).map(([skill, { percentage, inDemand }]) => (
+                    <li key={skill}>
+                        <strong>{skill}:{inDemand && <span className="in-demand">This is an in-demand skill</span>}</strong> {percentage}%{' '}
+                        
+                    </li>
+                ))}
+            </ul>
+        </div>
         </div>
     );
 }
