@@ -28,3 +28,8 @@ JobTracker/
 │   │   └── App.css     # Styling for the app
 │   └── package.json    # Frontend dependencies
 └── README.md       # Project documentation
+
+---
+
+## Authorization
+To enter the application for the first time, enter `abc123` into the login prompt.
