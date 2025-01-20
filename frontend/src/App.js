@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
+import Login from './Login';
+import ChangePassword from './ChangePassword';
 
 function App() {
     // State for job list
@@ -14,6 +16,14 @@ function App() {
         interviewDate: '',
         skills: [], // Skills array for tag input
     });
+
+    const [password, setPassword] = useState(''); // State for the login password
+    const [currentPassword, setCurrentPassword] = useState(''); // State for the current password when changing it
+    const [newPassword, setNewPassword] = useState(''); // State for the new password when changing it
+    const [success, setSuccess] = useState(''); // Login success status
+
+    const [authorized, setAuthorized] = useState(false); // Authorization status
+    const [changingPassword, setChangingPassword] = useState(false); // Changing password status
 
     const [newSkill, setNewSkill] = useState(''); // Current skill input
     const [error, setError] = useState(''); // State for error messages
@@ -157,6 +167,97 @@ function App() {
             skills: [],
         });
     };
+
+    const handleLogin = async () => {
+        setError('');
+        try {
+            const response = await fetch('http://localhost:5000/api/verify-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password }),
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                setAuthorized(true);
+                setPassword('');
+            } else {
+                setError('Invalid password. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error during login:', error);
+            setError('Something went wrong. Please try again later.');
+        }
+    };
+
+    const handlePasswordChange = async () => {
+        setError('');
+        setSuccess('');
+
+        if (!currentPassword || !newPassword) {
+            setError('Both fields are required.');
+            return;
+        }
+
+        try {
+            const verifyResponse = await fetch('http://localhost:5000/api/verify-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: currentPassword }),
+            });
+            const verifyData = await verifyResponse.json();
+
+            if (!verifyResponse.ok || !verifyData.success) {
+                setError('Current password is incorrect.');
+                return;
+            }
+
+            const updateResponse = await fetch('http://localhost:5000/api/password', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: newPassword }),
+            });
+
+            if (updateResponse.ok) {
+                setSuccess('Password updated successfully.');
+                setCurrentPassword('');
+                setNewPassword('');
+            } else {
+                const updateData = await updateResponse.json();
+                setError(updateData.error || 'Failed to update password.');
+            }
+        } catch (error) {
+            console.error('Error during password change:', error);
+            setError('Something went wrong. Please try again.');
+        }
+    };
+
+    if (changingPassword) {
+        return (
+            <ChangePassword
+                currentPassword={currentPassword}
+                setCurrentPassword={setCurrentPassword}
+                newPassword={newPassword}
+                setNewPassword={setNewPassword}
+                handlePasswordChange={handlePasswordChange}
+                setChangingPassword={setChangingPassword}
+                error={error}
+                success={success}
+            />
+        );
+    }
+
+    if (!authorized) {
+        return (
+            <Login
+                password={password}
+                setPassword={setPassword}
+                handleLogin={handleLogin}
+                setChangingPassword={setChangingPassword}
+                error={error}
+            />
+        );
+    }
 
     return (
         <div className="container">
