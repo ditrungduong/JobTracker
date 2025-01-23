@@ -168,6 +168,36 @@ function App() {
         });
     };
 
+    // Function to delete a job
+    const deleteJob = async (id) => {
+        const confirmDelete = window.confirm('Are you sure you want to delete this job?');
+        if (!confirmDelete) return;
+   
+        try {
+            const response = await fetch(`http://localhost:5000/api/jobs/${id}`, {
+                method: 'DELETE',
+            });
+   
+            if (!response.ok) {
+                const error = await response.json();
+
+
+                if (response.status === 404) {
+                    throw new Error('The job you are trying to delete does not exist');
+                }
+
+
+                throw new Error(error.error || 'Failed to delete job');
+            }
+   
+            setJobs((prevJobs) => prevJobs.filter((job) => job.id !== id));
+            alert('Job deleted successfully!');
+        } catch (error) {
+            console.error('Error deleting job:', error.message);
+            setError('Unable to delete job. Please try again later.');
+        }
+    };
+
     const handleLogin = async () => {
         setError('');
         try {
@@ -356,7 +386,7 @@ function App() {
                             <strong>Interview Date:</strong> {job.interviewDate}
                         </span>
                         <button onClick={() => startEditing(job)}>Edit</button>
-                        <button>Delete</button>
+                        <button onClick={() => deleteJob(job.id)}>Delete</button>
                     </li>
                 ))}
             </ul>
