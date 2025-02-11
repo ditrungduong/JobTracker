@@ -24,7 +24,10 @@ const initializeDatabase = () => {
                 applicationDate TEXT NOT NULL,
                 applicationStatus TEXT NOT NULL,
                 interviewDate TEXT,
-                skills TEXT
+                skills TEXT,
+                contact_name TEXT,
+                contact_email TEXT,
+                contact_phone TEXT
             )`,
             (err) => {
                 if (err) {

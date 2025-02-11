@@ -10,6 +10,24 @@ const bcrypt = require('bcrypt'); // needed for password encryption
 const saltRounds = 10; // needed for password encryption
 
 // API endpoint to fetch all jobs
+// app.get('/api/jobs', (req, res) => {
+//     const query = `SELECT * FROM jobs`;
+//     db.all(query, [], (err, rows) => {
+//         if (err) {
+//             return res.status(500).json({ error: err.message });
+//         }
+
+//         // Parse the `skills` field from JSON string to an array
+//         const jobs = rows.map((row) => ({
+//             ...row,
+//             skills: row.skills ? JSON.parse(row.skills) : [],
+//         }));
+
+//         res.json(jobs);
+//     });
+// });
+
+// API endpoint to fetch all jobs
 app.get('/api/jobs', (req, res) => {
     const query = `SELECT * FROM jobs`;
     db.all(query, [], (err, rows) => {
@@ -21,34 +39,37 @@ app.get('/api/jobs', (req, res) => {
         const jobs = rows.map((row) => ({
             ...row,
             skills: row.skills ? JSON.parse(row.skills) : [],
+            contact_name: row.contact_name || "",  // Ensure contacts are included
+            contact_email: row.contact_email || "",
+            contact_phone: row.contact_phone || "",
         }));
 
         res.json(jobs);
     });
 });
 
+
 // API endpoint to add a job
 app.post('/api/jobs', (req, res) => {
-    const { title, companyName, applicationDate, applicationStatus, interviewDate, skills } = req.body;
+    const { title, companyName, applicationDate, applicationStatus, interviewDate, skills, contact_name, contact_email, contact_phone } = req.body;
 
     if (!title || !companyName || !applicationDate || !applicationStatus) {
         return res.status(400).json({ error: 'All required fields must be provided.' });
     }
 
     const query = `
-        INSERT INTO jobs (title, companyName, applicationDate, applicationStatus, interviewDate, skills)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO jobs (title, companyName, applicationDate, applicationStatus, interviewDate, skills, contact_name, contact_email, contact_phone)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     db.run(
         query,
-        [
-            title,
-            companyName,
-            applicationDate,
-            applicationStatus,
-            interviewDate || null,
-            JSON.stringify(skills || []), // Convert skills array to JSON string
-        ],
+        [title, 
+            companyName, 
+            applicationDate, 
+            applicationStatus, 
+            interviewDate || null, 
+            JSON.stringify(skills || []), 
+            contact_name || '', contact_email || '', contact_phone || ''],
         function (err) {
             if (err) {
                 return res.status(500).json({ error: err.message });
@@ -61,6 +82,9 @@ app.post('/api/jobs', (req, res) => {
                 applicationStatus,
                 interviewDate,
                 skills,
+                contact_name,
+                contact_email,
+                contact_phone,
             });
         }
     );
