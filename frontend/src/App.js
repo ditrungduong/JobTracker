@@ -15,6 +15,9 @@ function App() {
         applicationStatus: '',
         interviewDate: '',
         skills: [], // Skills array for tag input
+        contact_name: '',
+        contact_email: '',
+        contact_phone: ''
     });
 
     const [password, setPassword] = useState(''); // State for the login password
@@ -354,6 +357,27 @@ function App() {
                     onChange={handleInputChange}
                     placeholder="Interview Date"
                 />
+                <input
+                    type="text"
+                    name="contact_name"
+                    value={newJob.contact_name}
+                    onChange={handleInputChange}
+                    placeholder="Contact Name"
+                />
+                <input
+                    type="email"
+                    name="contact_email"
+                    value={newJob.contact_email}
+                    onChange={handleInputChange}
+                    placeholder="Contact Email"
+                />
+                <input
+                    type="tel"
+                    name="contact_phone"
+                    value={newJob.contact_phone}
+                    onChange={handleInputChange}
+                    placeholder="Contact Phone"
+                />
                 {editingJob ? (
                     <>
                         <button onClick={updateJob}>Save</button>
@@ -364,7 +388,7 @@ function App() {
                 )}
             </div>
 
-            <ul>
+            {/* <ul>
                 {jobs.map((job) => (
                     <li key={job.id}>
                         <span>
@@ -385,11 +409,54 @@ function App() {
                         <span>
                             <strong>Interview Date:</strong> {job.interviewDate}
                         </span>
+                        {job.contact_name && ( // Only show contact details if they exist
+                            <>
+                                <span>
+                                    <strong>Contact Name:</strong> {job.contact_name}
+                                </span>
+                                <span>
+                                    <strong>Contact Email:</strong> {job.contact_email}
+                                </span>
+                                <span>
+                                    <strong>Contact Phone:</strong> {job.contact_phone}
+                                </span>
+                            </>
+                        )}
                         <button onClick={() => startEditing(job)}>Edit</button>
                         <button onClick={() => deleteJob(job.id)}>Delete</button>
                     </li>
                 ))}
+            </ul> */}
+            <ul>
+                {jobs.map((job) => (
+                    <li key={job.id} className="job-container">
+                        <div className="job-details">
+                            <span><strong>Company:</strong> {job.companyName}</span>
+                            <span><strong>Job Title:</strong> {job.title}</span>
+                            <span><strong>Application Date:</strong> {job.applicationDate}</span>
+                            <span><strong>Skills:</strong> {job.skills.join(', ')}</span>
+                            <span><strong>Status:</strong> {job.applicationStatus}</span>
+                            <span><strong>Interview Date:</strong> {job.interviewDate}</span>
+
+                            {/* Buttons must remain at the end of the row */}
+                            <div className="job-buttons">
+                                <button onClick={() => startEditing(job)}>Edit</button>
+                                <button onClick={() => deleteJob(job.id)}>Delete</button>
+                            </div>
+                        </div>
+
+                        {/* Contact details should appear in a new row */}
+                        {job.contact_name && (
+                            <div className="contact-details">
+                                <span><strong>Contact Name:</strong> {job.contact_name}</span>
+                                <span><strong>Contact Email:</strong> {job.contact_email}</span>
+                                <span><strong>Contact Phone:</strong> {job.contact_phone}</span>
+                            </div>
+                        )}
+                    </li>
+                ))}
             </ul>
+
         </div>
     );
 }
