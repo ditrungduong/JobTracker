@@ -21,38 +21,51 @@ app.get('/api/jobs', (req, res) => {
         const jobs = rows.map((row) => ({
             ...row,
             skills: row.skills ? JSON.parse(row.skills) : [],
+            contact_name: row.contact_name || "",  // Ensure contacts are included
+            contact_email: row.contact_email || "",
+            contact_phone: row.contact_phone || "",
         }));
 
         res.json(jobs);
     });
 });
 
-// API endpoint to add a job
 app.post('/api/jobs', (req, res) => {
-    const { title, companyName, applicationDate, applicationStatus, interviewDate, skills } = req.body;
+    const { 
+        title, companyName, applicationDate, applicationStatus, interviewDate, 
+        skills, contact_name, contact_email, contact_phone 
+    } = req.body;
+
+    console.log("Received job from frontend:", req.body); // Debugging line
 
     if (!title || !companyName || !applicationDate || !applicationStatus) {
         return res.status(400).json({ error: 'All required fields must be provided.' });
     }
 
     const query = `
-        INSERT INTO jobs (title, companyName, applicationDate, applicationStatus, interviewDate, skills)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO jobs (title, companyName, applicationDate, applicationStatus, interviewDate, skills, contact_name, contact_email, contact_phone)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
+
     db.run(
         query,
         [
-            title,
-            companyName,
-            applicationDate,
-            applicationStatus,
-            interviewDate || null,
-            JSON.stringify(skills || []), // Convert skills array to JSON string
+            title, 
+            companyName, 
+            applicationDate, 
+            applicationStatus, 
+            interviewDate || null, 
+            JSON.stringify(skills || []), 
+            contact_name || '', 
+            contact_email || '', 
+            contact_phone || ''
         ],
         function (err) {
             if (err) {
+                console.error('Database insert error:', err.message);
                 return res.status(500).json({ error: err.message });
             }
+            console.log("Job successfully inserted into DB with ID:", this.lastID);
             res.status(201).json({
                 id: this.lastID,
                 title,
@@ -61,10 +74,14 @@ app.post('/api/jobs', (req, res) => {
                 applicationStatus,
                 interviewDate,
                 skills,
+                contact_name,
+                contact_email,
+                contact_phone
             });
         }
     );
 });
+
 
 // API endpoint to update a job
 app.put('/api/jobs/:id', (req, res) => {

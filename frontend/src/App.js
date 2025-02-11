@@ -15,6 +15,9 @@ function App() {
         applicationStatus: '',
         interviewDate: '',
         skills: [], // Skills array for tag input
+        contact_name: '',
+        contact_email: '',
+        contact_phone: ''
     });
 
     const [password, setPassword] = useState(''); // State for the login password
@@ -78,29 +81,55 @@ function App() {
         }));
     };
 
-    // Add a new job
     const addJob = async () => {
-        const { title, companyName, applicationDate, applicationStatus, skills } = newJob;
-
+        const { 
+            title, companyName, applicationDate, applicationStatus, interviewDate, 
+            skills, contact_name, contact_email, contact_phone 
+        } = newJob;
+    
         if (!title || !companyName || !applicationDate || !applicationStatus) {
             alert('Please fill out all required fields before adding a job.');
             return;
         }
-
+    
+        const jobData = {
+            title, 
+            companyName, 
+            applicationDate, 
+            applicationStatus, 
+            interviewDate: interviewDate || null, 
+            skills: JSON.stringify(skills || []),
+            contact_name: contact_name || "", 
+            contact_email: contact_email || "", 
+            contact_phone: contact_phone || ""
+        };
+    
+        // Debugging: Log the exact job object being sent
+        console.log("Sending job to backend:", jobData);
+    
         try {
             const response = await fetch('http://localhost:5000/api/jobs', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...newJob, skills: JSON.stringify(skills) }),
+                body: JSON.stringify(jobData),
             });
-
+    
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.error || 'Failed to add job');
             }
-
+    
             const createdJob = await response.json();
-            setJobs([...jobs, { ...createdJob, skills: JSON.parse(createdJob.skills) }]);
+            console.log("Received response from backend:", createdJob);
+    
+            setJobs([...jobs, { 
+                ...createdJob, 
+                skills: JSON.parse(createdJob.skills),
+                contact_name: createdJob.contact_name,
+                contact_email: createdJob.contact_email,
+                contact_phone: createdJob.contact_phone
+            }]);
+    
             setNewJob({
                 companyName: '',
                 title: '',
@@ -108,12 +137,17 @@ function App() {
                 applicationStatus: '',
                 interviewDate: '',
                 skills: [],
+                contact_name: '',
+                contact_email: '',
+                contact_phone: ''
             });
         } catch (error) {
             console.error('Error adding job:', error.message);
             setError(error.message || 'Unable to add job. Please try again later.');
         }
     };
+    
+    
 
     // Start editing a job
     const startEditing = (job) => {
@@ -354,6 +388,27 @@ function App() {
                     onChange={handleInputChange}
                     placeholder="Interview Date"
                 />
+                <input
+                    type="text"
+                    name="contact_name"
+                    value={newJob.contact_name}
+                    onChange={handleInputChange}
+                    placeholder="Contact Name"
+                />
+                <input
+                    type="email"
+                    name="contact_email"
+                    value={newJob.contact_email}
+                    onChange={handleInputChange}
+                    placeholder="Contact Email"
+                />
+                <input
+                    type="tel"
+                    name="contact_phone"
+                    value={newJob.contact_phone}
+                    onChange={handleInputChange}
+                    placeholder="Contact Phone"
+                />
                 {editingJob ? (
                     <>
                         <button onClick={updateJob}>Save</button>
@@ -366,30 +421,34 @@ function App() {
 
             <ul>
                 {jobs.map((job) => (
-                    <li key={job.id}>
-                        <span>
-                            <strong>Company:</strong> {job.companyName}
-                        </span>
-                        <span>
-                            <strong>Job Title:</strong> {job.title}
-                        </span>
-                        <span>
-                            <strong>Application Date:</strong> {job.applicationDate}
-                        </span>
-                        <span>
-                            <strong>Skills:</strong> {job.skills.join(', ')}
-                        </span>
-                        <span>
-                            <strong>Status:</strong> {job.applicationStatus}
-                        </span>
-                        <span>
-                            <strong>Interview Date:</strong> {job.interviewDate}
-                        </span>
-                        <button onClick={() => startEditing(job)}>Edit</button>
-                        <button onClick={() => deleteJob(job.id)}>Delete</button>
+                    <li key={job.id} className="job-container">
+                        <div className="job-details">
+                            <span><strong>Company:</strong> {job.companyName}</span>
+                            <span><strong>Job Title:</strong> {job.title}</span>
+                            <span><strong>Application Date:</strong> {job.applicationDate}</span>
+                            <span><strong>Skills:</strong> {job.skills.join(', ')}</span>
+                            <span><strong>Status:</strong> {job.applicationStatus}</span>
+                            <span><strong>Interview Date:</strong> {job.interviewDate}</span>
+
+                            {/* Buttons must remain at the end of the row */}
+                            <div className="job-buttons">
+                                <button onClick={() => startEditing(job)}>Edit</button>
+                                <button onClick={() => deleteJob(job.id)}>Delete</button>
+                            </div>
+                        </div>
+
+                        {/* Contact details should appear in a new row */}
+                        {job.contact_name && (
+                            <div className="contact-details">
+                                <span><strong>Contact Name:</strong> {job.contact_name}</span>
+                                <span><strong>Contact Email:</strong> {job.contact_email}</span>
+                                <span><strong>Contact Phone:</strong> {job.contact_phone}</span>
+                            </div>
+                        )}
                     </li>
                 ))}
             </ul>
+
         </div>
     );
 }

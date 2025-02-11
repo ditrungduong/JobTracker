@@ -48,6 +48,8 @@ h1 {
 /* Input fields */
 input[type="text"],
 input[type="date"],
+input[type="tel"],
+input[type="email"],
 select {
   flex: 1; /* Inputs and dropdown share available space */
   min-width: 200px; /* Ensure a reasonable minimum width */
@@ -248,4 +250,41 @@ li button:hover {
 
 .button-group button {
   flex: 1; /* Ensures buttons have equal width */
+}
+
+
+.job-container {
+  display: flex;
+  flex-direction: column; /* Stack job details and contact details */
+  background: #f1f8e9; /* Light green background */
+  margin: 10px 0;
+  padding: 10px;
+  border: 1px solid #81c784;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Ensure job details stay in a single row */
+.job-details {
+  display: flex;
+  flex-wrap: wrap; /* Allow wrapping for smaller screens */
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Ensure contact details always appear on a new row */
+.contact-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px; /* Add spacing from job details */
+  padding-top: 10px;
+  border-top: 1px solid #81c784; /* Add a subtle separator */
+}
+
+/* Keep Edit/Delete buttons aligned */
+.job-buttons {
+  display: flex;
+  gap: 10px;
 }
