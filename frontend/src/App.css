@@ -48,6 +48,8 @@ h1 {
 /* Input fields */
 input[type="text"],
 input[type="date"],
+input[type="tel"],
+input[type="email"],
 select {
   flex: 1; /* Inputs and dropdown share available space */
   min-width: 200px; /* Ensure a reasonable minimum width */
