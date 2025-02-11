@@ -24,7 +24,10 @@ const initializeDatabase = () => {
                 applicationDate TEXT NOT NULL,
                 applicationStatus TEXT NOT NULL,
                 interviewDate TEXT,
-                skills TEXT
+                skills TEXT,
+                contact_name TEXT,
+                contact_email TEXT,
+                contact_phone TEXT
             )`,
             (err) => {
                 if (err) {
@@ -34,6 +37,21 @@ const initializeDatabase = () => {
                 }
             }
         );
+
+        db.run(
+            `CREATE TABLE IF NOT EXISTS authorization (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                password TEXT NOT NULL
+            )`,
+            (err) => {
+                if (err) {
+                    console.error('Error creating authorization table:', err.message);
+                } else {
+                    console.log('Password table ensured.');
+                }
+            }
+        );
+
     });
 };
 

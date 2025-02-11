@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
+import Login from './Login';
+import ChangePassword from './ChangePassword';
 
 function App() {
     // State for job list
@@ -13,7 +15,18 @@ function App() {
         applicationStatus: '',
         interviewDate: '',
         skills: [], // Skills array for tag input
+        contact_name: '',
+        contact_email: '',
+        contact_phone: ''
     });
+
+    const [password, setPassword] = useState(''); // State for the login password
+    const [currentPassword, setCurrentPassword] = useState(''); // State for the current password when changing it
+    const [newPassword, setNewPassword] = useState(''); // State for the new password when changing it
+    const [success, setSuccess] = useState(''); // Login success status
+
+    const [authorized, setAuthorized] = useState(false); // Authorization status
+    const [changingPassword, setChangingPassword] = useState(false); // Changing password status
 
     const [newSkill, setNewSkill] = useState(''); // Current skill input
     const [error, setError] = useState(''); // State for error messages
@@ -68,29 +81,55 @@ function App() {
         }));
     };
 
-    // Add a new job
     const addJob = async () => {
-        const { title, companyName, applicationDate, applicationStatus, skills } = newJob;
-
+        const { 
+            title, companyName, applicationDate, applicationStatus, interviewDate, 
+            skills, contact_name, contact_email, contact_phone 
+        } = newJob;
+    
         if (!title || !companyName || !applicationDate || !applicationStatus) {
             alert('Please fill out all required fields before adding a job.');
             return;
         }
-
+    
+        const jobData = {
+            title, 
+            companyName, 
+            applicationDate, 
+            applicationStatus, 
+            interviewDate: interviewDate || null, 
+            skills: JSON.stringify(skills || []),
+            contact_name: contact_name || "", 
+            contact_email: contact_email || "", 
+            contact_phone: contact_phone || ""
+        };
+    
+        // Debugging: Log the exact job object being sent
+        console.log("Sending job to backend:", jobData);
+    
         try {
             const response = await fetch('http://localhost:5000/api/jobs', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...newJob, skills: JSON.stringify(skills) }),
+                body: JSON.stringify(jobData),
             });
-
+    
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.error || 'Failed to add job');
             }
-
+    
             const createdJob = await response.json();
-            setJobs([...jobs, { ...createdJob, skills: JSON.parse(createdJob.skills) }]);
+            console.log("Received response from backend:", createdJob);
+    
+            setJobs([...jobs, { 
+                ...createdJob, 
+                skills: JSON.parse(createdJob.skills),
+                contact_name: createdJob.contact_name,
+                contact_email: createdJob.contact_email,
+                contact_phone: createdJob.contact_phone
+            }]);
+    
             setNewJob({
                 companyName: '',
                 title: '',
@@ -98,12 +137,17 @@ function App() {
                 applicationStatus: '',
                 interviewDate: '',
                 skills: [],
+                contact_name: '',
+                contact_email: '',
+                contact_phone: ''
             });
         } catch (error) {
             console.error('Error adding job:', error.message);
             setError(error.message || 'Unable to add job. Please try again later.');
         }
     };
+    
+    
 
     // Start editing a job
     const startEditing = (job) => {
@@ -157,6 +201,127 @@ function App() {
             skills: [],
         });
     };
+
+    // Function to delete a job
+    const deleteJob = async (id) => {
+        const confirmDelete = window.confirm('Are you sure you want to delete this job?');
+        if (!confirmDelete) return;
+   
+        try {
+            const response = await fetch(`http://localhost:5000/api/jobs/${id}`, {
+                method: 'DELETE',
+            });
+   
+            if (!response.ok) {
+                const error = await response.json();
+
+
+                if (response.status === 404) {
+                    throw new Error('The job you are trying to delete does not exist');
+                }
+
+
+                throw new Error(error.error || 'Failed to delete job');
+            }
+   
+            setJobs((prevJobs) => prevJobs.filter((job) => job.id !== id));
+            alert('Job deleted successfully!');
+        } catch (error) {
+            console.error('Error deleting job:', error.message);
+            setError('Unable to delete job. Please try again later.');
+        }
+    };
+
+    const handleLogin = async () => {
+        setError('');
+        try {
+            const response = await fetch('http://localhost:5000/api/verify-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password }),
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                setAuthorized(true);
+                setPassword('');
+            } else {
+                setError('Invalid password. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error during login:', error);
+            setError('Something went wrong. Please try again later.');
+        }
+    };
+
+    const handlePasswordChange = async () => {
+        setError('');
+        setSuccess('');
+
+        if (!currentPassword || !newPassword) {
+            setError('Both fields are required.');
+            return;
+        }
+
+        try {
+            const verifyResponse = await fetch('http://localhost:5000/api/verify-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: currentPassword }),
+            });
+            const verifyData = await verifyResponse.json();
+
+            if (!verifyResponse.ok || !verifyData.success) {
+                setError('Current password is incorrect.');
+                return;
+            }
+
+            const updateResponse = await fetch('http://localhost:5000/api/password', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: newPassword }),
+            });
+
+            if (updateResponse.ok) {
+                setSuccess('Password updated successfully.');
+                setCurrentPassword('');
+                setNewPassword('');
+            } else {
+                const updateData = await updateResponse.json();
+                setError(updateData.error || 'Failed to update password.');
+            }
+        } catch (error) {
+            console.error('Error during password change:', error);
+            setError('Something went wrong. Please try again.');
+        }
+    };
+
+    if (changingPassword) {
+        return (
+            <ChangePassword
+                currentPassword={currentPassword}
+                setCurrentPassword={setCurrentPassword}
+                newPassword={newPassword}
+                setNewPassword={setNewPassword}
+                handlePasswordChange={handlePasswordChange}
+                setChangingPassword={setChangingPassword}
+                error={error}
+                success={success}
+            />
+        );
+    }
+
+    if (!authorized) {
+        return (
+            <Login
+                password={password}
+                setPassword={setPassword}
+                handleLogin={handleLogin}
+                setChangingPassword={setChangingPassword}
+                error={error}
+            />
+        );
+    }
 
     return (
         <div className="container">
@@ -223,6 +388,27 @@ function App() {
                     onChange={handleInputChange}
                     placeholder="Interview Date"
                 />
+                <input
+                    type="text"
+                    name="contact_name"
+                    value={newJob.contact_name}
+                    onChange={handleInputChange}
+                    placeholder="Contact Name"
+                />
+                <input
+                    type="email"
+                    name="contact_email"
+                    value={newJob.contact_email}
+                    onChange={handleInputChange}
+                    placeholder="Contact Email"
+                />
+                <input
+                    type="tel"
+                    name="contact_phone"
+                    value={newJob.contact_phone}
+                    onChange={handleInputChange}
+                    placeholder="Contact Phone"
+                />
                 {editingJob ? (
                     <>
                         <button onClick={updateJob}>Save</button>
@@ -235,30 +421,34 @@ function App() {
 
             <ul>
                 {jobs.map((job) => (
-                    <li key={job.id}>
-                        <span>
-                            <strong>Company:</strong> {job.companyName}
-                        </span>
-                        <span>
-                            <strong>Job Title:</strong> {job.title}
-                        </span>
-                        <span>
-                            <strong>Application Date:</strong> {job.applicationDate}
-                        </span>
-                        <span>
-                            <strong>Skills:</strong> {job.skills.join(', ')}
-                        </span>
-                        <span>
-                            <strong>Status:</strong> {job.applicationStatus}
-                        </span>
-                        <span>
-                            <strong>Interview Date:</strong> {job.interviewDate}
-                        </span>
-                        <button onClick={() => startEditing(job)}>Edit</button>
-                        <button>Delete</button>
+                    <li key={job.id} className="job-container">
+                        <div className="job-details">
+                            <span><strong>Company:</strong> {job.companyName}</span>
+                            <span><strong>Job Title:</strong> {job.title}</span>
+                            <span><strong>Application Date:</strong> {job.applicationDate}</span>
+                            <span><strong>Skills:</strong> {job.skills.join(', ')}</span>
+                            <span><strong>Status:</strong> {job.applicationStatus}</span>
+                            <span><strong>Interview Date:</strong> {job.interviewDate}</span>
+
+                            {/* Buttons must remain at the end of the row */}
+                            <div className="job-buttons">
+                                <button onClick={() => startEditing(job)}>Edit</button>
+                                <button onClick={() => deleteJob(job.id)}>Delete</button>
+                            </div>
+                        </div>
+
+                        {/* Contact details should appear in a new row */}
+                        {job.contact_name && (
+                            <div className="contact-details">
+                                <span><strong>Contact Name:</strong> {job.contact_name}</span>
+                                <span><strong>Contact Email:</strong> {job.contact_email}</span>
+                                <span><strong>Contact Phone:</strong> {job.contact_phone}</span>
+                            </div>
+                        )}
                     </li>
                 ))}
             </ul>
+
         </div>
     );
 }
