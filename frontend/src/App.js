@@ -172,8 +172,6 @@ function App() {
             setError(error.message || 'Unable to add job. Please try again later.');
         }
     };
-    
-    
 
     // Start editing a job
     const startEditing = (job) => {
@@ -475,19 +473,18 @@ function App() {
                 ))}
             </ul>
 
-
-        {/* Skill Analysis Section */}
-        <div className="skill-analysis">
-            <h2>Skill Analysis</h2>
-            <ul>
-                {Object.entries(skillCounts(jobs)).map(([skill, { percentage, inDemand }]) => (
-                    <li key={skill}>
-                        <strong>{skill}:{inDemand && <span className="in-demand">This is an in-demand skill</span>}</strong> {percentage}%{' '}
-                        
-                    </li>
-                ))}
-            </ul>
-        </div>
+            {/* Skill Analysis Section */}
+            <div className="skill-analysis">
+                <h2>Skill Analysis</h2>
+                <ul>
+                    {Object.entries(skillCounts(jobs)).map(([skill, { percentage, inDemand }]) => (
+                        <li key={skill}>
+                            <strong>{skill}:{inDemand && <span className="in-demand">This is an in-demand skill</span>}</strong> {percentage}%{' '}
+                            
+                        </li>
+                    ))}
+                </ul>
+            </div>
         </div>
     );
 }
