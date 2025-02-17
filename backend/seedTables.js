@@ -1,6 +1,4 @@
 const db = require('./database'); // Import the database connection
-const bcrypt = require('bcrypt'); // Used for encrypting the password
-const saltRounds = 10; // Seed round required for bcrypt
 
 const jobs = [
     {
@@ -38,26 +36,6 @@ const jobs = [
     },
 ];
 
-const insertHashedPassword = async () => {
-    const plainTextPassword = 'abc123';
-    try {
-        const hash = await bcrypt.hash(plainTextPassword, saltRounds);
-        db.run(
-            `INSERT OR REPLACE INTO authorization (id, password) VALUES (1, ?)`,
-            [hash],
-            function (err) {
-                if (err) {
-                    console.error('Error inserting hashed password:', err.message);
-                } else {
-                    console.log('Hashed password added successfully.');
-                }
-            }
-        );
-    } catch (err) {
-        console.error('Error hashing password:', err.message);
-    }
-};
-
 db.serialize(() => {
     jobs.forEach((job) => {
         db.run(
@@ -82,11 +60,5 @@ db.serialize(() => {
                 }
             }
         );
-    });
-
-    insertHashedPassword().then(() => {
-        db.close(() => {
-            console.log('Database connection closed.');
-        });
     });
 });

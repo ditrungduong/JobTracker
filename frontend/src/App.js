@@ -25,8 +25,11 @@ function App() {
     const [newPassword, setNewPassword] = useState(''); // State for the new password when changing it
     const [success, setSuccess] = useState(''); // Login success status
 
+    const [email, setEmail] = useState('');
+    const [username, setUsername] = useState('');
     const [authorized, setAuthorized] = useState(false); // Authorization status
     const [changingPassword, setChangingPassword] = useState(false); // Changing password status
+    const [isRegistering, setIsRegistering] = useState(false);
 
     const [newSkill, setNewSkill] = useState(''); // Current skill input
     const [error, setError] = useState(''); // State for error messages
@@ -256,21 +259,24 @@ function App() {
         }
     };
 
+    // Login a user
     const handleLogin = async () => {
         setError('');
         try {
-            const response = await fetch('http://localhost:5000/api/verify-password', {
+            const response = await fetch('http://localhost:5000/api/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password }),
+                body: JSON.stringify({ email, password }),
             });
+    
             const data = await response.json();
-
-            if (data.success) {
+    
+            if (response.ok) {
                 setAuthorized(true);
                 setPassword('');
+                setEmail('');
             } else {
-                setError('Invalid password. Please try again.');
+                setError(data.error || 'Invalid email or password. Please try again.');
             }
         } catch (error) {
             console.error('Error during login:', error);
@@ -278,36 +284,71 @@ function App() {
         }
     };
 
+    // Register a user
+    const handleRegister = async () => {
+        setError('');
+        try {
+            const response = await fetch('http://localhost:5000/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, email, password }),
+            });
+    
+            const data = await response.json();
+    
+            if (response.ok) {
+                alert('Registration successful! You can now log in.');
+                setIsRegistering(false); // Switch back to login mode
+                setUsername('');
+                setEmail('');
+                setPassword('');
+            } else {
+                setError(data.error || 'Registration failed. Try again.');
+            }
+        } catch (error) {
+            console.error('Error during registration:', error);
+            setError('Something went wrong. Please try again later.');
+        }
+    };
+
+    // Logout a user
+    const handleLogout = () => {
+        setAuthorized(false); 
+    };    
+
+    // Change a user's password
     const handlePasswordChange = async () => {
         setError('');
         setSuccess('');
-
-        if (!currentPassword || !newPassword) {
-            setError('Both fields are required.');
+    
+        if (!email || !currentPassword || !newPassword) {
+            setError('All fields are required.');
             return;
         }
-
+    
         try {
             const verifyResponse = await fetch('http://localhost:5000/api/verify-password', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password: currentPassword }),
+                body: JSON.stringify({ email, password: currentPassword }),
             });
+    
             const verifyData = await verifyResponse.json();
-
+    
             if (!verifyResponse.ok || !verifyData.success) {
-                setError('Current password is incorrect.');
+                setError('Incorrect email or current password.');
                 return;
             }
-
+    
             const updateResponse = await fetch('http://localhost:5000/api/password', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password: newPassword }),
+                body: JSON.stringify({ email, password: newPassword }),
             });
-
+    
             if (updateResponse.ok) {
                 setSuccess('Password updated successfully.');
+                setEmail('');
                 setCurrentPassword('');
                 setNewPassword('');
             } else {
@@ -323,6 +364,8 @@ function App() {
     if (changingPassword) {
         return (
             <ChangePassword
+                email={email}
+                setEmail={setEmail}
                 currentPassword={currentPassword}
                 setCurrentPassword={setCurrentPassword}
                 newPassword={newPassword}
@@ -338,10 +381,17 @@ function App() {
     if (!authorized) {
         return (
             <Login
+                email={email}
+                setEmail={setEmail}
                 password={password}
                 setPassword={setPassword}
+                username={username}
+                setUsername={setUsername}
                 handleLogin={handleLogin}
+                handleRegister={handleRegister}
                 setChangingPassword={setChangingPassword}
+                isRegistering={isRegistering}
+                setIsRegistering={setIsRegistering}
                 error={error}
             />
         );
@@ -349,6 +399,9 @@ function App() {
 
     return (
         <div className="container">
+            <div className="logout-container">
+                <button className="logout-button" onClick={handleLogout}>Logout</button>
+            </div>
             <h1>Job Tracker</h1>
             {error && <div className="error-message">{error}</div>}
             <div className="input-container">

@@ -1,6 +1,8 @@
 import React from 'react';
 
 function ChangePassword({
+    email,
+    setEmail,
     currentPassword,
     setCurrentPassword,
     newPassword,
@@ -14,7 +16,14 @@ function ChangePassword({
         <div className="login-container">
             <div className="login-card">
                 <h1>Change Your Password</h1>
-                <p>Please verify your current password and enter a new one.</p>
+                <p>Please verify your email and current password, then enter a new one.</p>
+
+                <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your email"
+                />
 
                 <input
                     type="password"
@@ -23,6 +32,7 @@ function ChangePassword({
                     placeholder="Enter current password"
                     onKeyDown={(e) => e.key === 'Enter' && handlePasswordChange()}
                 />
+
                 <input
                     type="password"
                     value={newPassword}
@@ -30,6 +40,7 @@ function ChangePassword({
                     placeholder="Enter new password"
                     onKeyDown={(e) => e.key === 'Enter' && handlePasswordChange()}
                 />
+
                 {error && <p className="error-message">{error}</p>}
                 {success && <p className="success-message">{success}</p>}
 

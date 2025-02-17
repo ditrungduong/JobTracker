@@ -150,51 +150,104 @@ app.delete('/api/jobs/:id', (req, res) => {
     });
 });
 
-// API endpoint to update the password (hash it before storing)
-app.put('/api/password', (req, res) => {
-    const { password } = req.body;
+// Register a new user
+app.post('/api/register', (req, res) => {
+    const { username, email, password } = req.body;
 
-    if (!password) {
-        return res.status(400).json({ error: 'Password must be provided.' });
+    if (!username || !email || !password) {
+        return res.status(400).json({ error: 'All fields are required.' });
     }
 
-    // Hash the password
     bcrypt.hash(password, saltRounds, (err, hash) => {
         if (err) {
             return res.status(500).json({ error: 'Error hashing password.' });
         }
 
-        const query = `UPDATE authorization SET password = ? WHERE id = 1`;
-        db.run(query, [hash], function (err) {
+        const query = `INSERT INTO users (username, email, password) VALUES (?, ?, ?)`;
+        db.run(query, [username, email, hash], function (err) {
+            if (err) {
+                return res.status(500).json({ error: 'Error creating account. Username or email might be taken.' });
+            }
+            res.json({ message: 'User registered successfully!' });
+        });
+    });
+});
+
+// Login a user
+app.post('/api/login', (req, res) => {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+        return res.status(400).json({ error: 'Email and password are required.' });
+    }
+
+    const query = `SELECT id, username, password FROM users WHERE email = ?`;
+    db.get(query, [email], (err, user) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        if (!user) {
+            return res.status(401).json({ error: 'User not found.' });
+        }
+
+        bcrypt.compare(password, user.password, (err, result) => {
+            if (err) {
+                return res.status(500).json({ error: 'Error verifying password.' });
+            }
+
+            if (result) {
+                res.json({ success: true, message: 'Login successful.', username: user.username });
+            } else {
+                res.status(401).json({ error: 'Invalid password.' });
+            }
+        });
+    });
+});
+
+// API endpoint to update the password (hash it before storing)
+app.put('/api/password', (req, res) => {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+        return res.status(400).json({ error: 'Email and new password must be provided.' });
+    }
+
+    bcrypt.hash(password, saltRounds, (err, hash) => {
+        if (err) {
+            return res.status(500).json({ error: 'Error hashing password.' });
+        }
+
+        const query = `UPDATE users SET password = ? WHERE email = ?`;
+        db.run(query, [hash, email], function (err) {
             if (err) {
                 return res.status(500).json({ error: err.message });
             }
 
             if (this.changes === 0) {
-                return res.status(404).json({ error: 'Password not found or no changes made' });
+                return res.status(404).json({ error: 'User not found or no changes made.' });
             }
 
-            res.json({ message: 'Password updated and hashed successfully.' });
+            res.json({ message: 'Password updated successfully.' });
         });
     });
 });
 
 // API endpoint to verify the password
 app.post('/api/verify-password', (req, res) => {
-    const { password } = req.body;
+    const { email, password } = req.body;
 
-    if (!password) {
-        return res.status(400).json({ error: 'Password must be provided.' });
+    if (!email || !password) {
+        return res.status(400).json({ error: 'Email and password must be provided.' });
     }
 
-    const query = `SELECT password FROM authorization LIMIT 1`;
-    db.get(query, [], (err, row) => {
+    const query = `SELECT password FROM users WHERE email = ?`;
+    db.get(query, [email], (err, row) => {
         if (err) {
             return res.status(500).json({ error: err.message });
         }
 
         if (!row) {
-            return res.status(404).json({ error: 'Password not set.' });
+            return res.status(404).json({ error: 'User not found.' });
         }
 
         // Compare the provided password with the stored hash
@@ -204,10 +257,8 @@ app.post('/api/verify-password', (req, res) => {
             }
 
             if (result) {
-                // Password is correct
                 res.json({ success: true, message: 'Password verified.' });
             } else {
-                // Password is incorrect
                 res.status(401).json({ success: false, message: 'Invalid password.' });
             }
         });
