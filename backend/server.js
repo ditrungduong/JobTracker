@@ -212,6 +212,7 @@ app.put('/api/password', (req, res) => {
         return res.status(400).json({ error: 'Email and new password must be provided.' });
     }
 
+    // Hash the password
     bcrypt.hash(password, saltRounds, (err, hash) => {
         if (err) {
             return res.status(500).json({ error: 'Error hashing password.' });
@@ -257,8 +258,10 @@ app.post('/api/verify-password', (req, res) => {
             }
 
             if (result) {
+                // Password is correct
                 res.json({ success: true, message: 'Password verified.' });
             } else {
+                // Password is incorrect
                 res.status(401).json({ success: false, message: 'Invalid password.' });
             }
         });
