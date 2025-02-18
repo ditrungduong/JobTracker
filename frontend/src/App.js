@@ -26,7 +26,6 @@ function App() {
     const [success, setSuccess] = useState(''); // Login success status
 
     const [email, setEmail] = useState('');
-    const [username, setUsername] = useState('');
     const [authorized, setAuthorized] = useState(false); // Authorization status
     const [changingPassword, setChangingPassword] = useState(false); // Changing password status
     const [isRegistering, setIsRegistering] = useState(false);
@@ -291,7 +290,7 @@ function App() {
             const response = await fetch('http://localhost:5000/api/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, email, password }),
+                body: JSON.stringify({ email, password }),
             });
     
             const data = await response.json();
@@ -299,7 +298,6 @@ function App() {
             if (response.ok) {
                 alert('Registration successful! You can now log in.');
                 setIsRegistering(false); // Switch back to login mode
-                setUsername('');
                 setEmail('');
                 setPassword('');
             } else {
@@ -385,8 +383,6 @@ function App() {
                 setEmail={setEmail}
                 password={password}
                 setPassword={setPassword}
-                username={username}
-                setUsername={setUsername}
                 handleLogin={handleLogin}
                 handleRegister={handleRegister}
                 setChangingPassword={setChangingPassword}

@@ -41,13 +41,12 @@ const initializeDatabase = () => {
         db.run(
             `CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT UNIQUE NOT NULL,
                 email TEXT UNIQUE NOT NULL,
                 password TEXT NOT NULL
             )`,
             (err) => {
                 if (err) {
-                    console.error('Error creating authorization table:', err.message);
+                    console.error('Error creating users table:', err.message);
                 } else {
                     console.log('Users table ensured.');
                 }

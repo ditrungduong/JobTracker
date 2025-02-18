@@ -3,7 +3,6 @@ import React from 'react';
 function Login({ 
     email, setEmail, 
     password, setPassword, 
-    username, setUsername, 
     handleLogin, handleRegister, 
     setChangingPassword, 
     isRegistering, setIsRegistering, 
@@ -16,15 +15,6 @@ function Login({
                 <p>{isRegistering ? 'Create an account' : 'Please login to access your jobs dashboard'}</p>
 
                 <div className="form-group">
-                    {isRegistering && (
-                        <input
-                            type="text"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            placeholder="Enter username"
-                        />
-                    )}
-
                     <input
                         type="email"
                         value={email}

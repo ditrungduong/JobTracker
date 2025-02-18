@@ -152,10 +152,10 @@ app.delete('/api/jobs/:id', (req, res) => {
 
 // Register a new user
 app.post('/api/register', (req, res) => {
-    const { username, email, password } = req.body;
+    const { email, password } = req.body;
 
-    if (!username || !email || !password) {
-        return res.status(400).json({ error: 'All fields are required.' });
+    if (!email || !password) {
+        return res.status(400).json({ error: 'Email and password are required.' });
     }
 
     bcrypt.hash(password, saltRounds, (err, hash) => {
@@ -163,10 +163,10 @@ app.post('/api/register', (req, res) => {
             return res.status(500).json({ error: 'Error hashing password.' });
         }
 
-        const query = `INSERT INTO users (username, email, password) VALUES (?, ?, ?)`;
-        db.run(query, [username, email, hash], function (err) {
+        const query = `INSERT INTO users (email, password) VALUES (?, ?)`;
+        db.run(query, [email, hash], function (err) {
             if (err) {
-                return res.status(500).json({ error: 'Error creating account. Username or email might be taken.' });
+                return res.status(500).json({ error: 'Error creating account. Email might be taken.' });
             }
             res.json({ message: 'User registered successfully!' });
         });
@@ -181,7 +181,7 @@ app.post('/api/login', (req, res) => {
         return res.status(400).json({ error: 'Email and password are required.' });
     }
 
-    const query = `SELECT id, username, password FROM users WHERE email = ?`;
+    const query = `SELECT id, password FROM users WHERE email = ?`;
     db.get(query, [email], (err, user) => {
         if (err) {
             return res.status(500).json({ error: err.message });
@@ -196,7 +196,7 @@ app.post('/api/login', (req, res) => {
             }
 
             if (result) {
-                res.json({ success: true, message: 'Login successful.', username: user.username });
+                res.json({ success: true, message: 'Login successful.' });
             } else {
                 res.status(401).json({ error: 'Invalid password.' });
             }
