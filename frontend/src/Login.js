@@ -1,25 +1,50 @@
 import React from 'react';
 
-function Login({ password, setPassword, handleLogin, setChangingPassword, error }) {
+function Login({ 
+    email, setEmail, 
+    password, setPassword, 
+    handleLogin, handleRegister, 
+    setChangingPassword, 
+    isRegistering, setIsRegistering, 
+    error 
+}) {
     return (
         <div className="login-container">
             <div className="login-card">
-                <h1>Welcome to Job Tracker</h1>
-                <p>Please login to access your dashboard.</p>
+                <h1>Welcome to the Job Tracker</h1>
+                <p>{isRegistering ? 'Create an account' : 'Please login to access your jobs dashboard'}</p>
 
-                <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter password"
-                    onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-                />
+                <div className="form-group">
+                    <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="Enter email"
+                    />
+                    
+                    <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Enter password"
+                        onKeyDown={(e) => e.key === 'Enter' && (isRegistering ? handleRegister() : handleLogin())}
+                    />
+                </div>
+
                 {error && <p className="error-message">{error}</p>}
 
                 <div className="button-group">
-                    <button onClick={handleLogin}>Login</button>
-                    <button onClick={() => setChangingPassword(true)}>Change Password</button>
+                    <button onClick={isRegistering ? handleRegister : handleLogin}>
+                        {isRegistering ? 'Register' : 'Login'}
+                    </button>
+                    {!isRegistering && (
+                        <button onClick={() => setChangingPassword(true)}>Change Password</button>
+                    )}
                 </div>
+
+                <p onClick={() => setIsRegistering(!isRegistering)} className="toggle-link">
+                    {isRegistering ? 'Already have an account? Login here' : 'No account? Register here'}
+                </p>
             </div>
         </div>
     );
