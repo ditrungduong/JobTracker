@@ -268,8 +268,12 @@ app.post('/api/verify-password', (req, res) => {
     });
 });
 
-// Start the server
-const PORT = 5000;
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-});
+// DO NOT use app.listen() in Vercel
+// if (process.env.NODE_ENV !== "production") {
+//     app.listen(PORT, () => {
+//       console.log(`Server running locally on http://localhost:${PORT}`);
+//     });
+// }
+
+// Export the Express app
+module.exports = app;
