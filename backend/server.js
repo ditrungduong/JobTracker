@@ -6,6 +6,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+const PORT = 5000;
 const bcrypt = require('bcrypt'); // needed for password encryption
 const saltRounds = 10; // needed for password encryption
 
@@ -268,12 +269,9 @@ app.post('/api/verify-password', (req, res) => {
     });
 });
 
-// DO NOT use app.listen() in Vercel
-// if (process.env.NODE_ENV !== "production") {
-//     app.listen(PORT, () => {
-//       console.log(`Server running locally on http://localhost:${PORT}`);
-//     });
-// }
 
-// Export the Express app
-module.exports = app;
+if (process.env.NODE_ENV !== "production") {
+    app.listen(PORT, () => {
+      console.log(`Server running locally on http://localhost:${PORT}`);
+    });
+}
